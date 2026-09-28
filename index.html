@@ -79,6 +79,8 @@ button.ghost{border-color:transparent;background:transparent;color:var(--muted);
 .panel input,.panel textarea{border:1px solid var(--line);border-radius:8px;padding:9px 10px;background:var(--bg)}
 .panel textarea{min-height:220px;font-family:var(--serif);font-size:16px;line-height:1.5;resize:vertical}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.panel label.slider{flex-direction:row;align-items:center;font-size:14px}
+.slider select{padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
 .err{color:var(--bad);font-size:14px;margin:0}
 .foot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center}
 .status{font-size:12px;color:var(--muted)}
@@ -97,6 +99,7 @@ button.ghost{border-color:transparent;background:transparent;color:var(--muted);
     <label>Название<input id="fTitle" placeholder="Хулиганы"></label>
     <label>Автор<input id="fAuthor" placeholder="Валентин Гафт"></label>
     <label>Текст (строфы разделяй пустой строкой)<textarea id="fText"></textarea></label>
+    <div class="row"><button id="fPaste">Вставить из буфера</button><label class="slider">Выучить<select id="fPlan"><option value="0">по строфе в день</option><option value="1">за 1 день</option><option value="2" selected>за 2 дня</option><option value="3">за 3 дня</option><option value="5">за 5 дней</option><option value="7">за 7 дней</option></select></label></div>
     <p class="err" id="fErr" hidden></p>
     <div class="row"><button class="primary" id="fSave">Сохранить</button><button id="fCancel">Отмена</button></div>
   </section>
@@ -152,11 +155,15 @@ function streak(days){
   let n=0;while(set.has(dayStr(d))){n++;d.setDate(d.getDate()-1)}
   return n;
 }
-function focusIdx(p){
+function focus(p){
   const S=stanzas(p).length,days=p.days||[];
+  const chunk=Math.ceil(S/Math.min(S,p.plan||S)),total=Math.ceil(S/chunk);
   const n=days.length+(days.includes(today())?0:1);
-  return n<=S?n-1:null;
+  if(n>total)return null;
+  const from=(n-1)*chunk,to=Math.min(S,from+chunk)-1;
+  return{from,to,n,total,idx:Array.from({length:to-from+1},(_,k)=>from+k)};
 }
+const rng=(a,b)=>a===b?`${a+1}`:`${a+1}–${b+1}`;
 
 function tokens(line){
   const out=[];const re=/[\p{L}]+(?:-[\p{L}]+)*/gu;let last=0,m;
@@ -168,28 +175,34 @@ function rnd(i){const x=Math.sin(i*12.9898+seed*78.233)*43758.5453;return x-Math
 
 function renderToday(){
   const p=cur(),el=$("#today");if(!p){el.innerHTML="";return}
-  const days=p.days||[],done=days.includes(today()),S=stanzas(p).length,f=focusIdx(p),st=streak(days);
-  const dayN=days.length+(done?0:1);
+  const days=p.days||[],done=days.includes(today()),S=stanzas(p).length,f=focus(p),st=streak(days);
+  const one=f&&f.from===f.to,word=one?"строфу":"строфы";
   const plan=f===null
     ?"Все строфы пройдены. Расскажи целиком по памяти в режиме «По строкам», потом проверь себя на «Пропусках» при 100%."
-    :(f===0?"Строфа 1. Прочитай вслух 3 раза, затем «Буквы», затем «По строкам»."
-      :`Строфа ${f+1} — новая. Сначала повтори строфы 1–${f} по строкам, потом учи новую.`);
+    :(f.from===0?`${one?"Строфа":"Строфы"} ${rng(f.from,f.to)}. Прочитай вслух 3 раза, затем «Буквы», затем «По строкам».`
+      :`Новые: ${rng(f.from,f.to)}. Сначала повтори ${rng(0,f.from-1)} по строкам, потом учи новые.`);
   const last14=[];for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);last14.push(days.includes(dayStr(d)))}
-  el.innerHTML=`<div class="today-row"><div><div class="eyebrow">Сегодня · день ${dayN}${f!==null?" из "+S:""}</div><h2>${f===null?"Повтор целиком":"Учим строфу "+(f+1)}</h2></div>
+  let opts=`<option value="0"${!p.plan?" selected":""}>по строфе в день</option>`;
+  for(let k=1;k<=Math.min(7,S-1);k++)opts+=`<option value="${k}"${p.plan===k?" selected":""}>за ${k} ${plural(k,"день","дня","дней")}</option>`;
+  el.innerHTML=`<div class="today-row"><div><div class="eyebrow">Сегодня · день ${f?f.n+" из "+f.total:days.length+(done?0:1)}</div><h2>${f===null?"Повтор целиком":"Учим "+word+" "+rng(f.from,f.to)}</h2></div>
     <div class="streak">серия <b>${st}</b> ${plural(st,"день","дня","дней")}</div></div>
     <p class="plan">${plan}</p>
+    <label class="slider">Выучить<select id="planSel">${opts}</select></label>
     <div class="today-row"><div class="dots" aria-label="Последние 14 дней">${last14.map(on=>`<span class="dot${on?" on":""}"></span>`).join("")}</div>
     ${done?`<span class="done">Сегодня повторено ✓</span>`:`<button class="primary" id="markBtn">Отметить: повторил сегодня</button>`}</div>`;
   const mb=$("#markBtn");if(mb)mb.onclick=markToday;
+  $("#planSel").onchange=async e=>{const v=+e.target.value;p.plan=v||null;autoScope();resetDrillSilent();renderToday();renderChips();renderPoem();try{await persist(p)}catch(err){$("#status").textContent="Не удалось сохранить план."}};
 }
 function plural(n,a,b,c){const m=n%10,h=n%100;return m===1&&h!==11?a:m>=2&&m<=4&&(h<12||h>14)?b:c}
 
 function renderChips(){
   const p=cur();if(!p){$("#chips").innerHTML="";return}
-  const S=stanzas(p).length,f=focusIdx(p);
-  if(scope!==null&&scope>=S)scope=null;
-  let h=`<button data-s="all" aria-pressed="${scope===null}">Всё</button>`;
-  for(let i=0;i<S;i++)h+=`<button data-s="${i}" aria-pressed="${scope===i}" class="${f===i?"focus":""}" title="${f===i?"Строфа на сегодня":""}">${i+1}</button>`;
+  const S=stanzas(p).length,f=focus(p);
+  if(scope&&scope.some(k=>k>=S))scope=null;
+  const key=scope?scope.join(","):"all",fk=f?f.idx.join(","):"";
+  let h=`<button data-s="all" aria-pressed="${key==="all"}">Всё</button>`;
+  if(f&&f.idx.length>1)h+=`<button data-s="${fk}" aria-pressed="${key===fk}" class="focus">Сегодня</button>`;
+  for(let i=0;i<S;i++)h+=`<button data-s="${i}" aria-pressed="${key===String(i)}" class="${f&&f.idx.includes(i)&&f.idx.length===1?"focus":""}">${i+1}</button>`;
   $("#chips").innerHTML=h;
 }
 
@@ -210,7 +223,7 @@ function renderPoem(){
   const p=cur(),el=$("#poem");
   if(!p){el.innerHTML=`<p class="hint">Пока нет стихов. Нажми «+ Добавить».</p>`;return}
   const all=stanzas(p);
-  const idx=scope===null?all.map((_,i)=>i):[scope];
+  const idx=scope===null?all.map((_,i)=>i):scope;
   let wi=0,li=0,html="";
   const lines=[];idx.forEach(si=>all[si].forEach(l=>lines.push(l)));
   if(mode==="lines"&&lineIdx>lines.length)lineIdx=lines.length;
@@ -259,13 +272,13 @@ function renderAll(){renderPick();renderToday();renderChips();renderMode();rende
 
 $("#poem").addEventListener("click",e=>{const w=e.target.closest(".w");if(w)w.classList.toggle("open")});
 document.querySelector(".tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;mode=b.dataset.mode;saveUi();resetDrillSilent();renderMode();renderPoem()});
-$("#chips").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;scope=b.dataset.s==="all"?null:+b.dataset.s;resetDrillSilent();renderChips();renderPoem()});
+$("#chips").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;scope=b.dataset.s==="all"?null:b.dataset.s.split(",").map(Number);resetDrillSilent();renderChips();renderPoem()});
 function resetDrillSilent(){lineIdx=0;lineShown=false;hits=0;misses=0}
 $("#pick").onchange=e=>{curId=e.target.value;saveUi();scope=null;resetDrillSilent();autoScope();renderAll()};
 $("#pct").oninput=e=>{pct=+e.target.value;$("#pctVal").textContent=pct+"%";renderPoem()};
 $("#shuffle").onclick=()=>{seed++;renderPoem()};
 
-function autoScope(){const p=cur();if(p){const f=focusIdx(p);scope=f}}
+function autoScope(){const p=cur();if(p){const f=focus(p);scope=f?f.idx:null}}
 
 async function persist(p){
   if(db){const{id,...body}=p;await db.doc("poems/"+id).set(body)}
@@ -279,16 +292,17 @@ async function markToday(){
 }
 
 $("#addBtn").onclick=()=>{$("#addPanel").hidden=false;$("#fTitle").focus()};
+$("#fPaste").onclick=async()=>{const err=$("#fErr");try{const t=await navigator.clipboard.readText();if(t){$("#fText").value=t;err.hidden=true}else throw 0}catch(e){err.textContent="Не получилось вставить автоматически. Долго нажми в поле текста и выбери «Вставить».";err.hidden=false}};
 $("#fCancel").onclick=()=>{$("#addPanel").hidden=true;$("#fErr").hidden=true};
 $("#fSave").onclick=async()=>{
   const title=$("#fTitle").value.trim(),author=$("#fAuthor").value.trim(),text=$("#fText").value.replace(/\r/g,"").trim();
   const err=$("#fErr");
   if(!title||!text){err.textContent="Нужны название и текст.";err.hidden=false;return}
-  const p={id:"p"+Date.now().toString(36),title,author,text,created:Date.now(),days:[]};
+  const p={id:"p"+Date.now().toString(36),title,author,text,created:Date.now(),days:[],plan:(+$("#fPlan").value)||null};
   poems.unshift(p);curId=p.id;saveUi();
   try{await persist(p)}catch(e){err.textContent="Не сохранилось. Проверь соединение и нажми ещё раз.";err.hidden=false;poems=poems.filter(x=>x!==p);return}
   $("#fTitle").value=$("#fAuthor").value=$("#fText").value="";err.hidden=true;$("#addPanel").hidden=true;
-  scope=0;resetDrillSilent();renderAll();
+  autoScope();resetDrillSilent();renderAll();
 };
 
 $("#delBox").addEventListener("click",async e=>{
