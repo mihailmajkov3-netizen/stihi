@@ -142,6 +142,7 @@ if(ui.mode)mode=ui.mode;
 curId=ui.cur||null;
 function saveUi(){lsSet(LS_UI,{mode,cur:curId})}
 
+function order(a){const u=p=>p.created>1000;return a.sort((x,y)=>(u(y)-u(x))||(u(x)?y.created-x.created:x.created-y.created))}
 function cur(){return poems.find(p=>p.id===curId)||poems[0]}
 function stanzas(p){return p.text.trim().split(/\n\s*\n/).map(s=>s.split("\n").map(l=>l.trim()).filter(Boolean)).filter(s=>s.length)}
 
@@ -284,7 +285,7 @@ $("#fSave").onclick=async()=>{
   const err=$("#fErr");
   if(!title||!text){err.textContent="Нужны название и текст.";err.hidden=false;return}
   const p={id:"p"+Date.now().toString(36),title,author,text,created:Date.now(),days:[]};
-  poems.push(p);curId=p.id;saveUi();
+  poems.unshift(p);curId=p.id;saveUi();
   try{await persist(p)}catch(e){err.textContent="Не сохранилось. Проверь соединение и нажми ещё раз.";err.hidden=false;poems=poems.filter(x=>x!==p);return}
   $("#fTitle").value=$("#fAuthor").value=$("#fText").value="";err.hidden=true;$("#addPanel").hidden=true;
   scope=0;resetDrillSilent();renderAll();
@@ -302,7 +303,7 @@ $("#delBox").addEventListener("click",async e=>{
   }
 });
 
-poems=lsGet(LS,null)||FALLBACK.slice();
+poems=order(lsGet(LS,null)||FALLBACK.slice());
 autoScope();renderAll();
 $("#status").textContent="Работает без интернета · прогресс хранится на этом телефоне";
 
