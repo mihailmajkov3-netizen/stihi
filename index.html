@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2F55C9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Стихи">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>*,*::before,*::after{box-sizing:border-box}body{margin:0}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}</style>
+<title>Стихи наизусть</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Golos+Text:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#EDF0F4;--surface:#FFFFFF;--ink:#16202B;--muted:#5D6B7A;--line:#D5DCE4;
+  --accent:#2F55C9;--accent-soft:#E3E9FA;--good:#1D7F52;--bad:#B63A33;
+  --serif:"PT Serif",Georgia,"Times New Roman",serif;
+  --sans:"Golos Text",-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;--bg:#0F141A;--surface:#18202A;--ink:#E4EAF1;--muted:#91A1B3;--line:#2A3542;
+  --accent:#86A2FF;--accent-soft:#1E2A47;--good:#52C28D;--bad:#F07A70;}}
+:root[data-theme="dark"]{
+  color-scheme:dark;--bg:#0F141A;--surface:#18202A;--ink:#E4EAF1;--muted:#91A1B3;--line:#2A3542;
+  --accent:#86A2FF;--accent-soft:#1E2A47;--good:#52C28D;--bad:#F07A70;}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+.wrap{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:flex;flex-direction:column;gap:16px}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:600}
+button.ghost{border-color:transparent;background:transparent;color:var(--muted);padding:6px 8px}
+.top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.top select{flex:1;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.today{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.today-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.today h2{margin:0;font-family:var(--serif);font-size:22px;font-weight:700;text-wrap:balance}
+.streak{font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px}
+.streak b{color:var(--ink);font-size:18px}
+.plan{margin:0;color:var(--muted)}
+.dots{display:flex;gap:4px;flex-wrap:wrap}
+.dot{width:10px;height:10px;border-radius:3px;background:var(--line)}
+.dot.on{background:var(--good)}
+.done{color:var(--good);font-weight:600}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.tabs button{border:0;border-radius:7px;padding:8px 4px;font-size:14px;background:transparent;color:var(--muted)}
+.tabs button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chips button{padding:5px 12px;border-radius:999px;font-size:14px;position:relative}
+.chips button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);font-weight:600}
+.chips button.focus::after{content:"";position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:var(--good)}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.slider{display:flex;gap:10px;align-items:center;font-size:14px;color:var(--muted);flex-wrap:wrap}
+.slider input{flex:1;min-width:140px;accent-color:var(--accent)}
+.poem{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px 20px}
+.poem-head{margin-bottom:18px}
+.poem-head h1{margin:0;font-family:var(--serif);font-size:26px;line-height:1.2;text-wrap:balance}
+.poem-head .by{color:var(--muted);font-style:italic;font-family:var(--serif)}
+.verse{font-family:var(--serif);font-size:19px;line-height:1.65;display:flex;flex-direction:column;gap:18px}
+.stanza{display:flex;flex-direction:column}
+.stanza .num{font-family:var(--sans);font-size:11px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:2px}
+.w{border-radius:3px;cursor:pointer}
+.w.hid .rest{color:transparent;border-bottom:1.5px dotted var(--muted);letter-spacing:.02em}
+.w.blank{color:transparent;background:var(--accent-soft);border-bottom:1.5px solid var(--accent)}
+.w.open{color:var(--accent)}
+.w.open .rest{color:inherit;border-bottom:0}
+.w.blank.open{background:transparent;border:0}
+.ln-now{color:var(--muted)}
+.ln-now .w .rest{color:transparent;border-bottom:1.5px dotted var(--muted)}
+.ln-future{display:none}
+.drill{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.drill .score{margin-left:auto;align-self:center;color:var(--muted);font-variant-numeric:tabular-nums;font-size:14px}
+.btn-good{border-color:var(--good);color:var(--good)}
+.btn-bad{border-color:var(--bad);color:var(--bad)}
+.finish{font-family:var(--sans);padding:12px 0 0;color:var(--good);font-weight:600}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.panel label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.panel input,.panel textarea{border:1px solid var(--line);border-radius:8px;padding:9px 10px;background:var(--bg)}
+.panel textarea{min-height:220px;font-family:var(--serif);font-size:16px;line-height:1.5;resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.err{color:var(--bad);font-size:14px;margin:0}
+.foot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center}
+.status{font-size:12px;color:var(--muted)}
+@media (max-width:420px){.verse{font-size:17px;line-height:1.6}.poem{padding:20px 14px}.tabs button{font-size:13px;padding:8px 2px}}
+@media (prefers-reduced-motion:no-preference){.w{transition:color .15s,background .15s}}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="top">
+    <select id="pick" aria-label="Стихотворение"></select>
+    <button id="addBtn">+ Добавить</button>
+  </div>
+
+  <section class="panel" id="addPanel" hidden>
+    <div class="eyebrow">Новое стихотворение</div>
+    <label>Название<input id="fTitle" placeholder="Хулиганы"></label>
+    <label>Автор<input id="fAuthor" placeholder="Валентин Гафт"></label>
+    <label>Текст (строфы разделяй пустой строкой)<textarea id="fText"></textarea></label>
+    <p class="err" id="fErr" hidden></p>
+    <div class="row"><button class="primary" id="fSave">Сохранить</button><button id="fCancel">Отмена</button></div>
+  </section>
+
+  <section class="today" id="today"></section>
+
+  <div class="tabs" role="group" aria-label="Режим">
+    <button data-mode="read">Читать</button>
+    <button data-mode="letters">Буквы</button>
+    <button data-mode="gaps">Пропуски</button>
+    <button data-mode="lines">По строкам</button>
+  </div>
+
+  <div class="chips" id="chips"></div>
+  <p class="hint" id="hint"></p>
+  <div class="slider" id="sliderBox" hidden>
+    <span>Скрыто</span><input type="range" id="pct" min="10" max="100" step="10" value="40"><b id="pctVal">40%</b>
+    <button class="ghost" id="shuffle">Перемешать</button>
+  </div>
+
+  <article class="poem" id="poem"></article>
+
+  <div class="foot">
+    <span class="status" id="status"></span>
+    <span id="delBox"><button class="ghost" id="delBtn">Удалить стихотворение</button></span>
+  </div>
+</div>
+
+<script>
+const FALLBACK=[{"id": "pushkin", "title": "Я вас любил", "author": "Александр Пушкин, 1829", "created": 1, "days": [], "text": "Я вас любил: любовь ещё, быть может,\nВ душе моей угасла не совсем;\nНо пусть она вас больше не тревожит;\nЯ не хочу печалить вас ничем.\n\nЯ вас любил безмолвно, безнадежно,\nТо робостью, то ревностью томим;\nЯ вас любил так искренно, так нежно,\nКак дай вам Бог любимой быть другим."}, {"id": "tyutchev", "title": "Я встретил вас", "author": "Фёдор Тютчев, 1870", "created": 2, "days": [], "text": "Я встретил вас — и всё былое\nВ отжившем сердце ожило;\nЯ вспомнил время золотое —\nИ сердцу стало так тепло...\n\nКак поздней осенью порою\nБывают дни, бывает час,\nКогда повеет вдруг весною\nИ что-то встрепенётся в нас, —\n\nТак, весь обвеян дуновеньем\nТех лет душевной полноты,\nС давно забытым упоеньем\nСмотрю на милые черты...\n\nКак после вековой разлуки,\nГляжу на вас, как бы во сне, —\nИ вот — слышнее стали звуки,\nНе умолкавшие во мне...\n\nТут не одно воспоминанье,\nТут жизнь заговорила вновь, —\nИ то же в вас очарованье,\nИ та ж в душе моей любовь!.."}, {"id": "esenin", "title": "Не жалею, не зову, не плачу", "author": "Сергей Есенин, 1921", "created": 3, "days": [], "text": "Не жалею, не зову, не плачу,\nВсё пройдёт, как с белых яблонь дым.\nУвяданья золотом охваченный,\nЯ не буду больше молодым.\n\nТы теперь не так уж будешь биться,\nСердце, тронутое холодком,\nИ страна берёзового ситца\nНе заманит шляться босиком.\n\nДух бродяжий! ты всё реже, реже\nРасшевеливаешь пламень уст.\nО моя утраченная свежесть,\nБуйство глаз и половодье чувств!\n\nЯ теперь скупее стал в желаньях,\nЖизнь моя? иль ты приснилась мне?\nСловно я весенней гулкой ранью\nПроскакал на розовом коне.\n\nВсе мы, все мы в этом мире тленны,\nТихо льётся с клёнов листьев медь...\nБудь же ты вовек благословенна,\nЧто пришло процвесть и умереть."}];
+const LS="stihi-v1",LS_UI="stihi-ui";
+const $=s=>document.querySelector(s);
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let db=null,poems=[],curId=null,mode="read",scope=null,pct=40,seed=1,lineIdx=0,lineShown=false,misses=0,hits=0;
+
+function lsGet(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function dayStr(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+const today=()=>dayStr(new Date());
+
+const ui=lsGet(LS_UI,{});
+if(ui.mode)mode=ui.mode;
+curId=ui.cur||null;
+function saveUi(){lsSet(LS_UI,{mode,cur:curId})}
+
+function cur(){return poems.find(p=>p.id===curId)||poems[0]}
+function stanzas(p){return p.text.trim().split(/\n\s*\n/).map(s=>s.split("\n").map(l=>l.trim()).filter(Boolean)).filter(s=>s.length)}
+
+function streak(days){
+  const set=new Set(days);let d=new Date();
+  if(!set.has(dayStr(d)))d.setDate(d.getDate()-1);
+  let n=0;while(set.has(dayStr(d))){n++;d.setDate(d.getDate()-1)}
+  return n;
+}
+function focusIdx(p){
+  const S=stanzas(p).length,days=p.days||[];
+  const n=days.length+(days.includes(today())?0:1);
+  return n<=S?n-1:null;
+}
+
+function tokens(line){
+  const out=[];const re=/[\p{L}]+(?:-[\p{L}]+)*/gu;let last=0,m;
+  while((m=re.exec(line))){if(m.index>last)out.push({t:line.slice(last,m.index)});out.push({t:m[0],w:true});last=m.index+m[0].length}
+  if(last<line.length)out.push({t:line.slice(last)});
+  return out;
+}
+function rnd(i){const x=Math.sin(i*12.9898+seed*78.233)*43758.5453;return x-Math.floor(x)}
+
+function renderToday(){
+  const p=cur(),el=$("#today");if(!p){el.innerHTML="";return}
+  const days=p.days||[],done=days.includes(today()),S=stanzas(p).length,f=focusIdx(p),st=streak(days);
+  const dayN=days.length+(done?0:1);
+  const plan=f===null
+    ?"Все строфы пройдены. Расскажи целиком по памяти в режиме «По строкам», потом проверь себя на «Пропусках» при 100%."
+    :(f===0?"Строфа 1. Прочитай вслух 3 раза, затем «Буквы», затем «По строкам»."
+      :`Строфа ${f+1} — новая. Сначала повтори строфы 1–${f} по строкам, потом учи новую.`);
+  const last14=[];for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);last14.push(days.includes(dayStr(d)))}
+  el.innerHTML=`<div class="today-row"><div><div class="eyebrow">Сегодня · день ${dayN}${f!==null?" из "+S:""}</div><h2>${f===null?"Повтор целиком":"Учим строфу "+(f+1)}</h2></div>
+    <div class="streak">серия <b>${st}</b> ${plural(st,"день","дня","дней")}</div></div>
+    <p class="plan">${plan}</p>
+    <div class="today-row"><div class="dots" aria-label="Последние 14 дней">${last14.map(on=>`<span class="dot${on?" on":""}"></span>`).join("")}</div>
+    ${done?`<span class="done">Сегодня повторено ✓</span>`:`<button class="primary" id="markBtn">Отметить: повторил сегодня</button>`}</div>`;
+  const mb=$("#markBtn");if(mb)mb.onclick=markToday;
+}
+function plural(n,a,b,c){const m=n%10,h=n%100;return m===1&&h!==11?a:m>=2&&m<=4&&(h<12||h>14)?b:c}
+
+function renderChips(){
+  const p=cur();if(!p){$("#chips").innerHTML="";return}
+  const S=stanzas(p).length,f=focusIdx(p);
+  if(scope!==null&&scope>=S)scope=null;
+  let h=`<button data-s="all" aria-pressed="${scope===null}">Всё</button>`;
+  for(let i=0;i<S;i++)h+=`<button data-s="${i}" aria-pressed="${scope===i}" class="${f===i?"focus":""}" title="${f===i?"Строфа на сегодня":""}">${i+1}</button>`;
+  $("#chips").innerHTML=h;
+}
+
+const HINTS={read:"Читай вслух. Нажми на номер строфы, чтобы учить по частям.",
+  letters:"Видна только первая буква. Произнеси слово, потом нажми на него — проверишь.",
+  gaps:"Часть слов спрятана. Двигай ползунок вверх, когда станет легко.",
+  lines:"Видишь начала слов следующей строки. Скажи её вслух, потом открой."};
+
+function wordHtml(tok,i,kind){
+  if(!tok.w)return esc(tok.t);
+  const t=esc(tok.t);
+  if(kind==="first")return `<span class="w hid" data-i="${i}">${esc(tok.t[0])}<span class="rest">${esc(tok.t.slice(1))}</span></span>`;
+  if(kind==="blank")return `<span class="w blank" data-i="${i}">${t}</span>`;
+  return t;
+}
+
+function renderPoem(){
+  const p=cur(),el=$("#poem");
+  if(!p){el.innerHTML=`<p class="hint">Пока нет стихов. Нажми «+ Добавить».</p>`;return}
+  const all=stanzas(p);
+  const idx=scope===null?all.map((_,i)=>i):[scope];
+  let wi=0,li=0,html="";
+  const lines=[];idx.forEach(si=>all[si].forEach(l=>lines.push(l)));
+  if(mode==="lines"&&lineIdx>lines.length)lineIdx=lines.length;
+  for(const si of idx){
+    html+=`<div class="stanza">${idx.length>1||scope!==null?`<span class="num">Строфа ${si+1}</span>`:""}`;
+    for(const line of all[si]){
+      let cls="",kind="plain";
+      if(mode==="letters")kind="first";
+      if(mode==="lines"){if(li<lineIdx)cls="";else if(li===lineIdx)cls=lineShown?"":"ln-now";else cls="ln-future";if(li===lineIdx&&!lineShown)kind="first"}
+      const parts=tokens(line).map(tok=>{
+        if(!tok.w)return esc(tok.t);
+        const i=wi++;
+        if(mode==="gaps")return wordHtml(tok,i,rnd(i)<pct/100?"blank":"plain");
+        return wordHtml(tok,i,kind);
+      }).join("");
+      html+=`<div class="${cls}">${parts}</div>`;li++;
+    }
+    html+=`</div>`;
+  }
+  let drill="";
+  if(mode==="lines"){
+    if(lineIdx>=lines.length)drill=`<div class="finish">Готово: ${hits} ${plural(hits,"строка","строки","строк")} вспомнил сам, ${misses} — с подсказкой.</div><div class="drill"><button class="primary" id="restart">Ещё раз</button></div>`;
+    else if(!lineShown)drill=`<div class="drill"><button class="primary" id="showLine">Показать строку</button><span class="score">${lineIdx+1} / ${lines.length}</span></div>`;
+    else drill=`<div class="drill"><button class="btn-good" id="knew">Помнил</button><button class="btn-bad" id="forgot">Забыл</button><span class="score">${lineIdx+1} / ${lines.length}</span></div>`;
+  }
+  el.innerHTML=`<div class="poem-head"><h1>${esc(p.title)}</h1>${p.author?`<div class="by">${esc(p.author)}</div>`:""}</div><div class="verse">${html}</div>${drill}`;
+  const b=id=>el.querySelector("#"+id);
+  if(b("showLine"))b("showLine").onclick=()=>{lineShown=true;renderPoem()};
+  if(b("knew"))b("knew").onclick=()=>{hits++;nextLine()};
+  if(b("forgot"))b("forgot").onclick=()=>{misses++;nextLine()};
+  if(b("restart"))b("restart").onclick=resetDrill;
+}
+function nextLine(){lineIdx++;lineShown=false;renderPoem()}
+function resetDrill(){lineIdx=0;lineShown=false;hits=0;misses=0;renderPoem()}
+
+function renderPick(){
+  const s=$("#pick");
+  s.innerHTML=poems.map(p=>`<option value="${esc(p.id)}"${p.id===(cur()||{}).id?" selected":""}>${esc(p.title)}${p.author?" — "+esc(p.author.split(",")[0]):""}</option>`).join("");
+}
+function renderMode(){
+  document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===mode));
+  $("#hint").textContent=HINTS[mode];
+  $("#sliderBox").hidden=mode!=="gaps";
+}
+function renderAll(){renderPick();renderToday();renderChips();renderMode();renderPoem();$("#delBox").hidden=!cur()}
+
+$("#poem").addEventListener("click",e=>{const w=e.target.closest(".w");if(w)w.classList.toggle("open")});
+document.querySelector(".tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;mode=b.dataset.mode;saveUi();resetDrillSilent();renderMode();renderPoem()});
+$("#chips").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;scope=b.dataset.s==="all"?null:+b.dataset.s;resetDrillSilent();renderChips();renderPoem()});
+function resetDrillSilent(){lineIdx=0;lineShown=false;hits=0;misses=0}
+$("#pick").onchange=e=>{curId=e.target.value;saveUi();scope=null;resetDrillSilent();autoScope();renderAll()};
+$("#pct").oninput=e=>{pct=+e.target.value;$("#pctVal").textContent=pct+"%";renderPoem()};
+$("#shuffle").onclick=()=>{seed++;renderPoem()};
+
+function autoScope(){const p=cur();if(p){const f=focusIdx(p);scope=f}}
+
+async function persist(p){
+  if(db){const{id,...body}=p;await db.doc("poems/"+id).set(body)}
+  else lsSet(LS,poems);
+}
+async function markToday(){
+  const p=cur();if(!p)return;
+  p.days=[...new Set([...(p.days||[]),today()])].sort();
+  renderToday();renderChips();
+  try{await persist(p)}catch(e){$("#status").textContent="Не удалось сохранить отметку. Попробуй ещё раз."}
+}
+
+$("#addBtn").onclick=()=>{$("#addPanel").hidden=false;$("#fTitle").focus()};
+$("#fCancel").onclick=()=>{$("#addPanel").hidden=true;$("#fErr").hidden=true};
+$("#fSave").onclick=async()=>{
+  const title=$("#fTitle").value.trim(),author=$("#fAuthor").value.trim(),text=$("#fText").value.replace(/\r/g,"").trim();
+  const err=$("#fErr");
+  if(!title||!text){err.textContent="Нужны название и текст.";err.hidden=false;return}
+  const p={id:"p"+Date.now().toString(36),title,author,text,created:Date.now(),days:[]};
+  poems.push(p);curId=p.id;saveUi();
+  try{await persist(p)}catch(e){err.textContent="Не сохранилось. Проверь соединение и нажми ещё раз.";err.hidden=false;poems=poems.filter(x=>x!==p);return}
+  $("#fTitle").value=$("#fAuthor").value=$("#fText").value="";err.hidden=true;$("#addPanel").hidden=true;
+  scope=0;resetDrillSilent();renderAll();
+};
+
+$("#delBox").addEventListener("click",async e=>{
+  const box=$("#delBox");
+  if(e.target.id==="delBtn"){box.innerHTML=`<span class="status">Удалить «${esc(cur().title)}»? </span><button class="ghost" id="delYes" style="color:var(--bad)">Да, удалить</button><button class="ghost" id="delNo">Нет</button>`;return}
+  if(e.target.id==="delNo"){box.innerHTML=`<button class="ghost" id="delBtn">Удалить стихотворение</button>`;return}
+  if(e.target.id==="delYes"){
+    const p=cur();poems=poems.filter(x=>x!==p);curId=poems[0]?.id||null;saveUi();
+    box.innerHTML=`<button class="ghost" id="delBtn">Удалить стихотворение</button>`;
+    try{if(db)await db.doc("poems/"+p.id).delete();else lsSet(LS,poems)}catch(err){$("#status").textContent="Не удалось удалить."}
+    scope=null;resetDrillSilent();autoScope();renderAll();
+  }
+});
+
+poems=lsGet(LS,null)||FALLBACK.slice();
+autoScope();renderAll();
+$("#status").textContent="Работает без интернета · прогресс хранится на этом телефоне";
+
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
+</script>
+
+</body></html>
